@@ -1,17 +1,15 @@
 function love.load()
-    love.graphics.setBackgroundColor(0.2, 0.2, 0.3)
+    background = love.graphics.newImage("mapno.png")
 
-    -- Load sprite untuk setiap arah
+    -- Sprites
     spriteDown = love.graphics.newImage("playerDownsfix.png")
     spriteLeft = love.graphics.newImage("playerLefts.png")
     spriteRight = love.graphics.newImage("playerRights.png")
     spriteUp = love.graphics.newImage("playerUpsfix.png")
 
-    -- Hitung ukuran frame (asumsi semua ukuran sama)
     frameWidth = spriteDown:getWidth() / 4
     frameHeight = spriteDown:getHeight()
 
-    -- Potong frame untuk masing-masing arah
     frames = {down = {}, left = {}, right = {}, up = {}}
     for i = 0, 3 do
         frames.down[i+1] = love.graphics.newQuad(i * frameWidth, 0, frameWidth, frameHeight, spriteDown:getDimensions())
@@ -20,12 +18,12 @@ function love.load()
         frames.up[i+1] = love.graphics.newQuad(i * frameWidth, 0, frameWidth, frameHeight, spriteUp:getDimensions())
     end
 
-    -- Posisi awal
-    playerX = love.graphics.getWidth() / 2
-    playerY = love.graphics.getHeight() / 2
+    -- Player position (world coordinates)
+    playerX = background:getWidth() / 2
+    playerY = background:getHeight() / 2
     speed = 200
 
-    -- Animasi
+    -- Animation
     currentFrame = 1
     frameTime = 0.15
     timer = 0
@@ -56,7 +54,7 @@ function love.update(dt)
         moving = true
     end
 
-    -- Update animasi
+    -- Update animation
     if moving then
         timer = timer + dt
         if timer >= frameTime then
@@ -72,6 +70,21 @@ function love.update(dt)
 end
 
 function love.draw()
+    local screenWidth = love.graphics.getWidth()
+    local screenHeight = love.graphics.getHeight()
+
+    -- Camera offset (center player)
+    local camX = playerX - screenWidth / 2
+    local camY = playerY - screenHeight / 2
+
+    -- Limit camera so it doesn’t show outside the map
+    camX = math.max(0, math.min(camX, background:getWidth() - screenWidth))
+    camY = math.max(0, math.min(camY, background:getHeight() - screenHeight))
+
+    -- Draw background with offset
+    love.graphics.draw(background, -camX, -camY)
+
+    -- Draw player in center of screen
     local sprite
     if currentDirection == "down" then
         sprite = spriteDown
@@ -84,7 +97,7 @@ function love.draw()
     end
 
     love.graphics.draw(sprite, frames[currentDirection][currentFrame],
-        playerX - frameWidth / 2,
-        playerY - frameHeight / 2
+        screenWidth / 2 - frameWidth / 2,
+        screenHeight / 2 - frameHeight / 2
     )
 end
